@@ -16,7 +16,7 @@ namespace oBTC_ABC_Miner
 {
     public partial class frmMain : Form
     {
-        string appVersion = "1.3";
+        string appVersion = "1.4";
 
         bool logWork = false;
 
@@ -605,6 +605,40 @@ namespace oBTC_ABC_Miner
                 sr.Close();
             }
             catch { }
+        }
+
+        private void linkStats_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            if (txtWallet.Text.Trim().Length != txtWallet.MaxLength)
+            {
+                MessageBox.Show("Enter wallet address");
+                return;
+            }
+            //bc1q60wchj096pstqddt9pjmzgwpayd64r9pg4242h
+            switch (cbPoolList.Text)
+            {
+                case "pool.opticalbitcoin.com":
+                    Process.Start("https://pool.opticalbitcoin.com/?#obtc/dashboard?address=" + txtWallet.Text.Trim());
+                    break;
+
+                case "pool.obtc.me":
+                    Process.Start("https://pool.obtc.me/users_stats");
+                    break;
+
+                case "obtc.rxrat.com":
+                    Process.Start("https://rxrat.com/#/pools/obtc/wallet/" + txtWallet.Text.Trim());
+                    break;
+
+                case "minersmine.com":
+                    Process.Start("https://minersmine.com/?address=" + txtWallet.Text.Trim());
+                    break;
+            }
+
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            Clipboard.SetText(txtWallet.Text.Trim());
         }
     }
 

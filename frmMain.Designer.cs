@@ -41,6 +41,9 @@
             this.gInfo = new System.Windows.Forms.GroupBox();
             this.tabDevices = new System.Windows.Forms.TabControl();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.linkStats = new System.Windows.Forms.LinkLabel();
+            this.label4 = new System.Windows.Forms.Label();
+            this.button1 = new System.Windows.Forms.Button();
             this.gInfo.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
@@ -154,6 +157,9 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.button1);
+            this.groupBox1.Controls.Add(this.linkStats);
+            this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Controls.Add(this.btnClear);
             this.groupBox1.Controls.Add(this.lstDevice);
@@ -169,6 +175,37 @@
             this.groupBox1.TabIndex = 14;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Setup";
+            // 
+            // linkStats
+            // 
+            this.linkStats.ActiveLinkColor = System.Drawing.Color.Blue;
+            this.linkStats.AutoSize = true;
+            this.linkStats.Location = new System.Drawing.Point(126, 147);
+            this.linkStats.Name = "linkStats";
+            this.linkStats.Size = new System.Drawing.Size(133, 15);
+            this.linkStats.TabIndex = 15;
+            this.linkStats.TabStop = true;
+            this.linkStats.Text = "View My Pool Stats";
+            this.linkStats.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkStats_LinkClicked);
+            // 
+            // label4
+            // 
+            this.label4.Location = new System.Drawing.Point(126, 167);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(282, 37);
+            this.label4.TabIndex = 14;
+            this.label4.Text = "*Allow up to 30 minutes for your stats to appear in the pool link above.";
+            // 
+            // button1
+            // 
+            this.button1.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(162)));
+            this.button1.Location = new System.Drawing.Point(356, 111);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(87, 22);
+            this.button1.TabIndex = 16;
+            this.button1.Text = "Copy Address";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // frmMain
             // 
@@ -208,6 +245,9 @@
         private System.Windows.Forms.Button btnClear;
         private System.Windows.Forms.Button btnSelectAll;
         private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.LinkLabel linkStats;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Button button1;
     }
 }
 
