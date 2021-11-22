@@ -22,23 +22,14 @@ namespace oBTC_ABC_Miner
 
         string logFileName = "";
 
-        string device = "";
-
         string url = "";
         string walletAddr = "";
         string password = "";
-
-
-        bool advanced = false;
-
-        string amdworkeradv = "";
-        string amdpasswordadv = "";
 
         public frmMain()
         {
             InitializeComponent();
 
-            tabSetup.Enabled = false;
             gInfo.Enabled = false;
 
             Text += " V" + appVersion;
@@ -78,19 +69,10 @@ namespace oBTC_ABC_Miner
                     lstDevice.Items.Add(frml.deviceList[i]);
                 }
 
-                for (int i = 0; i < frml.deviceList.Count; i++)
-                {
-                    List<string> adevice = frml.deviceList[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
-
-                    dataGridDevices.Rows.Add(new object[] { true, adevice[0].Replace(":", "").Trim(), adevice[1], adevice[3], "", "" });
-                }
-
                 cbPoolList.SelectedIndex = 0;
 
-                tabSetup.Enabled = true;
                 gInfo.Enabled = true;
 
-                LoadAdv();
             }
             else
             {
@@ -102,8 +84,6 @@ namespace oBTC_ABC_Miner
 
         private void btnStart_Click(object sender, EventArgs e)
         {
-            advanced = false;
-
             if (btnStart.Text == "Start")
             {
                 if (txtWallet.Text.Trim().Length != txtWallet.MaxLength)
@@ -118,7 +98,6 @@ namespace oBTC_ABC_Miner
                     return;
                 }
 
-                pAdv.Enabled = false;
                 btnStart.Enabled = false;
                 cbPoolList.Enabled = false;
                 txtWallet.Enabled = false;
@@ -217,7 +196,7 @@ namespace oBTC_ABC_Miner
                 }
 
 
-                string saveFile = Application.StartupPath + "\\" + cbPoolList.Text + "_basic.dat";
+                string saveFile = Application.StartupPath + "\\" + cbPoolList.Text + ".dat";
 
                 if (File.Exists(saveFile))
                 {
@@ -272,258 +251,9 @@ namespace oBTC_ABC_Miner
                 lstDevice.Enabled = true;
                 btnSelectAll.Enabled = true;
                 btnClear.Enabled = true;
-                pAdv.Enabled = true;
             }
 
             if (btnStart.Text == "Stop")
-            {
-                foreach (Process process in Process.GetProcesses())
-                {
-                    if (process.ProcessName.ToLower().Contains("srbminer"))
-                    {
-                        if (process.MainModule.FileName.ToLower().Contains(Application.StartupPath.ToLower()))
-                        {
-                            process.Kill();
-                        }
-                    }
-
-                    if (process.ProcessName.ToLower().Contains("suprminer"))
-                    {
-                        if (process.MainModule.FileName.ToLower().Contains(Application.StartupPath.ToLower()))
-                        {
-                            process.Kill();
-                        }
-                    }
-                }
-            }
-        }
-
-        private void btnStartAdv_Click(object sender, EventArgs e)
-        {
-            advanced = true;
-
-            if (btnStartAdv.Text == "Start")
-            {
-                if (txtWalletAdv.Text.Trim() == "")
-                {
-                    MessageBox.Show("Enter wallet address");
-                    return;
-                }
-
-                if (txtPool.Text.Trim() == "")
-                {
-                    MessageBox.Show("Enter pool address");
-                    return;
-                }
-
-                bool _checked = false;
-                bool _worker_pass_empty = false;
-                bool _amd_worker_pass_diff = false;
-
-                string amdworker = "";
-                string amdpassword = "";
-
-                for (int i = 0; i < dataGridDevices.Rows.Count; i++)
-                {
-                    if ((bool)dataGridDevices.Rows[i].Cells[0].Value)
-                    {
-                        _checked = true;
-
-                        if (dataGridDevices.Rows[i].Cells[4].Value.ToString().Trim() == "" || dataGridDevices.Rows[i].Cells[5].Value.ToString().Trim() == "")
-                        {
-                            _worker_pass_empty = true;
-                        }
-
-                        if (dataGridDevices.Rows[i].Cells[1].Value.ToString().Trim() == "AMD")
-                        {
-                            if ((amdworker == "") && (dataGridDevices.Rows[i].Cells[4].Value.ToString().Trim() != ""))
-                            {
-                                amdworker = dataGridDevices.Rows[i].Cells[4].Value.ToString().Trim();
-                            }
-
-                            if ((amdpassword == "") && (dataGridDevices.Rows[i].Cells[5].Value.ToString().Trim() != ""))
-                            {
-                                amdpassword = dataGridDevices.Rows[i].Cells[5].Value.ToString().Trim();
-                            }
-
-                            if ((amdworker != dataGridDevices.Rows[i].Cells[4].Value.ToString().Trim()))
-                            {
-                                _amd_worker_pass_diff = true;
-                            }
-
-                            if ((amdpassword != dataGridDevices.Rows[i].Cells[5].Value.ToString().Trim()))
-                            {
-                                _amd_worker_pass_diff = true;
-                            }
-                        }
-
-                    }
-                }
-
-                if (!_checked)
-                {
-                    MessageBox.Show("No device selected");
-                    return;
-                }
-
-                if (_worker_pass_empty)
-                {
-                    MessageBox.Show("Worker/Password Empty");
-                    return;
-                }
-
-                if (_amd_worker_pass_diff)
-                {
-                    MessageBox.Show("AMD devices must have same Worker/Password");
-                    return;
-                }
-
-                amdworkeradv = amdworker;
-                amdpasswordadv = amdpassword;
-
-                pBasic.Enabled = false;
-                btnStartAdv.Enabled = false;
-                txtPool.Enabled = false;
-                txtWalletAdv.Enabled = false;
-                dataGridDevices.Enabled = false;
-                btnSelectAllAdv.Enabled = false;
-                btnClearAdv.Enabled = false;
-                txtParamsAMD.Enabled = false;
-                txtParamsNvidia.Enabled = false;
-
-                walletAddr = txtWalletAdv.Text.Trim();
-
-                url = txtPool.Text.Trim() + ":" + nPort.Value.ToString();
-
-                List<string> amdDevices = new List<string>();
-                List<string> nvidiaDevices = new List<string>();
-
-                for (int i = 0; i < dataGridDevices.Rows.Count; i++)
-                {
-                    if ((bool)dataGridDevices.Rows[i].Cells[0].Value)
-                    {
-                        if (dataGridDevices.Rows[i].Cells[1].Value.ToString().Trim() == "AMD")
-                        {
-                            amdDevices.Add(dataGridDevices.Rows[i].Cells[2].Value.ToString().Trim() + " " + dataGridDevices.Rows[i].Cells[3].Value.ToString().Trim());
-                        }
-
-                        if (dataGridDevices.Rows[i].Cells[1].Value.ToString().Trim() == "NVIDIA")
-                        {
-                            nvidiaDevices.Add(dataGridDevices.Rows[i].Cells[2].Value.ToString().Trim() + " " + dataGridDevices.Rows[i].Cells[3].Value.ToString().Trim() + " " + dataGridDevices.Rows[i].Cells[4].Value.ToString().Trim() + " " + dataGridDevices.Rows[i].Cells[5].Value.ToString().Trim());
-                        }
-                    }
-                }
-
-
-                List<BackgroundWorker> bwPool = new List<BackgroundWorker>();
-
-                tabDevices.TabPages.Clear();
-
-                if (amdDevices.Count > 0)
-                {
-                    TabPage tb = new TabPage("AMD");
-                    tb.BackColor = Color.White;
-
-                    TextBox info = new TextBox();
-                    info.BackColor = Color.White;
-                    info.BorderStyle = BorderStyle.None;
-                    info.Multiline = true;
-                    info.Dock = DockStyle.Fill;
-                    info.ReadOnly = true;
-                    info.ScrollBars = ScrollBars.Vertical;
-                    tb.Controls.Add(info);
-
-                    tabDevices.TabPages.Add(tb);
-                }
-
-                if (nvidiaDevices.Count > 0)
-                {
-                    for (int i = 0; i < nvidiaDevices.Count; i++)
-                    {
-                        List<string> adevice = nvidiaDevices[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
-
-                        TabPage tb = new TabPage(adevice[0]);
-                        tb.BackColor = Color.White;
-
-                        TextBox info = new TextBox();
-                        info.BackColor = Color.White;
-                        info.BorderStyle = BorderStyle.None;
-                        info.Multiline = true;
-                        info.Dock = DockStyle.Fill;
-                        info.ReadOnly = true;
-                        info.ScrollBars = ScrollBars.Vertical;
-                        tb.Controls.Add(info);
-
-                        tabDevices.TabPages.Add(tb);
-                    }
-                }
-
-
-                string saveFile = Application.StartupPath + "\\" + "adv.dat";
-
-                if (File.Exists(saveFile))
-                {
-                    File.Delete(saveFile);
-                }
-
-                StreamWriter sw = new StreamWriter(saveFile, false, Encoding.Default);
-                sw.WriteLine(txtPool.Text.Trim());
-                sw.WriteLine(nPort.Value.ToString().Trim());
-                sw.WriteLine(txtWalletAdv.Text.Trim());
-                sw.WriteLine(txtParamsNvidia.Text.Trim());
-                sw.WriteLine(txtParamsAMD.Text.Trim());
-
-                for (int i = 0; i < dataGridDevices.Rows.Count; i++)
-                {
-                    sw.WriteLine(dataGridDevices.Rows[i].Cells[1].Value.ToString().Trim() + ";" + dataGridDevices.Rows[i].Cells[2].Value.ToString().Trim() + ";" + dataGridDevices.Rows[i].Cells[3].Value.ToString().Trim() + ";" + dataGridDevices.Rows[i].Cells[0].Value.ToString().Trim() + ";" + dataGridDevices.Rows[i].Cells[4].Value.ToString().Trim() + ";" + dataGridDevices.Rows[i].Cells[5].Value.ToString().Trim() + ";");
-                }
-                sw.Close();
-
-                int tabId = 0;
-
-                if (amdDevices.Count > 0)
-                {
-                    BackgroundWorker bwStartAMD = new BackgroundWorker();
-                    bwStartAMD.DoWork += BwStartAMD_DoWork;
-                    bwStartAMD.RunWorkerAsync(new object[] { amdDevices, tabId++ });
-
-                    bwPool.Add(bwStartAMD);
-                }
-
-                if (nvidiaDevices.Count > 0)
-                {
-                    for (int i = 0; i < nvidiaDevices.Count; i++)
-                    {
-                        BackgroundWorker bwStartNVIDIA = new BackgroundWorker();
-                        bwStartNVIDIA.DoWork += BwStartNVIDIA_DoWork;
-                        bwStartNVIDIA.RunWorkerAsync(new object[] { nvidiaDevices[i], tabId++ });
-
-                        bwPool.Add(bwStartNVIDIA);
-                    }
-                }
-
-                for (int i = 0; i < bwPool.Count; i++)
-                {
-                    while (bwPool[i].IsBusy)
-                    {
-                        Application.DoEvents();
-                        Thread.Sleep(50);
-                    }
-                }
-
-                btnStartAdv.Text = "Start";
-                pBasic.Enabled = true;
-                btnStartAdv.Enabled = true;
-                txtPool.Enabled = true;
-                txtWalletAdv.Enabled = true;
-                dataGridDevices.Enabled = true;
-                btnSelectAllAdv.Enabled = true;
-                btnClearAdv.Enabled = true;
-                txtParamsAMD.Enabled = true;
-                txtParamsNvidia.Enabled = true;
-            }
-
-            if (btnStartAdv.Text == "Stop")
             {
                 foreach (Process process in Process.GetProcesses())
                 {
@@ -590,32 +320,19 @@ namespace oBTC_ABC_Miner
             string deviceIdList = "";
 
 
-            if (!advanced)
+
+            List<string> amdDevices = (List<string>)((object[])e.Argument)[0];
+
+            for (int i = 0; i < amdDevices.Count; i++)
             {
-                List<string> amdDevices = (List<string>)((object[])e.Argument)[0];
+                List<string> adevice = amdDevices[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                worker = "." + adevice[5];
 
-                for (int i = 0; i < amdDevices.Count; i++)
-                {
-                    List<string> adevice = amdDevices[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
-                    worker = "." + adevice[5];
-
-                    deviceIdList += adevice[3] + "!";
-                }
-
-                deviceIdList = deviceIdList.Substring(0, deviceIdList.Length - 1);
+                deviceIdList += adevice[3] + "!";
             }
-            else
-            {
-                List<string> amdDevices = (List<string>)((object[])e.Argument)[0];
 
-                for (int i = 0; i < amdDevices.Count; i++)
-                {
-                    List<string> adevice = amdDevices[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
-                    deviceIdList += adevice[1] + "!";
-                }
+            deviceIdList = deviceIdList.Substring(0, deviceIdList.Length - 1);
 
-                deviceIdList = deviceIdList.Substring(0, deviceIdList.Length - 1);
-            }
 
             try
             {
@@ -626,29 +343,14 @@ namespace oBTC_ABC_Miner
                 startInfo.UseShellExecute = true;
                 startInfo.FileName = Application.StartupPath + "\\SRBMiner\\SRBMiner-MULTI.exe";
                 startInfo.WorkingDirectory = Application.StartupPath + "\\SRBMiner\\";
-
-                if (!advanced)
-                {
-                    startInfo.Arguments = @"--disable-cpu --algorithm heavyhash --pool " + url + " --wallet " + walletAddr + worker + " --password " + password + " --gpu-id " + deviceIdList + " --log-file _out.txt";
-                }
-                else
-                {
-                    startInfo.Arguments = @"--disable-cpu --algorithm heavyhash --pool " + url + " --wallet " + walletAddr + "." + amdworkeradv + " --password " + amdpasswordadv + " --gpu-id " + deviceIdList + " --log-file _out.txt" + " " + txtParamsAMD.Text;
-                }
-
+                startInfo.Arguments = @"--disable-cpu --algorithm heavyhash --pool " + url + " --wallet " + walletAddr + worker + " --password " + password + " --gpu-id " + deviceIdList + " --log-file _out.txt";
                 process.StartInfo = startInfo;
                 process.Start();
 
-                if (!advanced)
-                {
-                    a = () => btnStart.Text = "Stop"; btnStart.Invoke(a);
-                    a = () => btnStart.Enabled = true; btnStart.Invoke(a);
-                }
-                else
-                {
-                    a = () => btnStartAdv.Text = "Stop"; btnStartAdv.Invoke(a);
-                    a = () => btnStartAdv.Enabled = true; btnStartAdv.Invoke(a);
-                }
+
+                a = () => btnStart.Text = "Stop"; btnStart.Invoke(a);
+                a = () => btnStart.Enabled = true; btnStart.Invoke(a);
+
 
                 while (true)
                 {
@@ -711,19 +413,11 @@ namespace oBTC_ABC_Miner
 
             string advworker = "";
             string advpassword = "";
-            if (!advanced)
-            {
-                List<string> devinfo = nvidiaDevice.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
-                worker = "." + devinfo[5];
-                deviceIdList = devinfo[3];
-            }
-            else
-            {
-                List<string> devinfo = nvidiaDevice.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
-                deviceIdList = devinfo[1];
-                advworker = devinfo[2];
-                advpassword = devinfo[3];
-            }
+
+            List<string> devinfo = nvidiaDevice.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+            worker = "." + devinfo[5];
+            deviceIdList = devinfo[3];
+
 
             try
             {
@@ -735,29 +429,14 @@ namespace oBTC_ABC_Miner
                 startInfo.RedirectStandardOutput = true;
                 startInfo.FileName = Application.StartupPath + "\\Suprminer\\suprminer.exe";
                 startInfo.WorkingDirectory = Application.StartupPath + "\\Suprminer\\";
-
-                if (!advanced)
-                {
-                    startInfo.Arguments = @"-a obtc -o " + url + " -u " + walletAddr + worker + " -p " + password + " -d " + deviceIdList;
-                }
-                else
-                {
-                    startInfo.Arguments = @"-a obtc -o " + url + " -u " + walletAddr + "." + advworker + " -p " + advpassword + " -d " + deviceIdList + " " + txtParamsNvidia.Text;
-                }
-
+                startInfo.Arguments = @"-a obtc -o " + url + " -u " + walletAddr + worker + " -p " + password + " -d " + deviceIdList;
                 process.StartInfo = startInfo;
                 process.Start();
 
-                if (!advanced)
-                {
-                    a = () => btnStart.Text = "Stop"; btnStart.Invoke(a);
-                    a = () => btnStart.Enabled = true; btnStart.Invoke(a);
-                }
-                else
-                {
-                    a = () => btnStartAdv.Text = "Stop"; btnStartAdv.Invoke(a);
-                    a = () => btnStartAdv.Enabled = true; btnStartAdv.Invoke(a);
-                }
+
+                a = () => btnStart.Text = "Stop"; btnStart.Invoke(a);
+                a = () => btnStart.Enabled = true; btnStart.Invoke(a);
+
 
                 while (!process.HasExited)
                 {
@@ -850,7 +529,22 @@ namespace oBTC_ABC_Miner
         {
             try
             {
-                string loadFile = Application.StartupPath + "\\" + cbPoolList.Text + "_basic.dat";
+                string oldfile = Application.StartupPath + "\\" + cbPoolList.Text + "_basic.dat";
+
+
+                string loadFile = Application.StartupPath + "\\" + cbPoolList.Text + ".dat";
+
+                try
+                {
+                    File.Copy(oldfile, loadFile, true);
+                }
+                catch { }
+
+                try
+                {
+                    File.Delete(oldfile);
+                }
+                catch { }
 
                 StreamReader sr = new StreamReader(loadFile, Encoding.Default);
 
@@ -912,102 +606,6 @@ namespace oBTC_ABC_Miner
             }
             catch { }
         }
-
-        private void LoadAdv()
-        {
-            try
-            {
-                string loadFile = Application.StartupPath + "\\" + "adv.dat";
-                StreamReader sr = new StreamReader(loadFile, Encoding.Default);
-
-                try
-                {
-                    List<string> devices = new List<string>();
-
-                    int lineNum = 0;
-                    while (!sr.EndOfStream)
-                    {
-                        if (lineNum == 0)
-                        {
-                            txtPool.Text = sr.ReadLine().Trim();
-                            lineNum++;
-                            continue;
-                        }
-
-                        if (lineNum == 1)
-                        {
-                            nPort.Value = Convert.ToDecimal(sr.ReadLine().Trim());
-                            lineNum++;
-                            continue;
-                        }
-
-                        if (lineNum == 2)
-                        {
-                            txtWalletAdv.Text = sr.ReadLine().Trim();
-                            lineNum++;
-                            continue;
-                        }
-
-                        if (lineNum == 3)
-                        {
-                            txtParamsNvidia.Text = sr.ReadLine().Trim();
-                            lineNum++;
-                            continue;
-                        }
-
-                        if (lineNum == 4)
-                        {
-                            txtParamsAMD.Text = sr.ReadLine().Trim();
-                            lineNum++;
-                            continue;
-                        }
-
-
-                        devices.Add(sr.ReadLine().Trim());
-
-                    }
-
-                    for (int i = 0; i < dataGridDevices.Rows.Count; i++)
-                    {
-                        string[] dev = devices[i].Split(';');
-
-                        if (dataGridDevices.Rows[i].Cells[1].Value.ToString().Trim() != dev[0] || dataGridDevices.Rows[i].Cells[2].Value.ToString().Trim() != dev[1] || dataGridDevices.Rows[i].Cells[3].Value.ToString().Trim() != dev[2])
-                        {
-                            throw new Exception();
-                        }
-
-                        try
-                        {
-                            dataGridDevices.Rows[i].Cells[0].Value = Convert.ToBoolean(dev[3]);
-                            dataGridDevices.Rows[i].Cells[4].Value = dev[4];
-                            dataGridDevices.Rows[i].Cells[5].Value = dev[5];
-                        }
-                        catch
-                        {
-                            throw new Exception();
-                        }
-                    }
-
-                }
-                catch
-                {
-                    sr.Close();
-                    File.Delete(loadFile);
-                    return;
-                }
-
-                sr.Close();
-
-            }
-            catch
-            {
-
-            }
-            
-
-        }
-
-
     }
 
 
