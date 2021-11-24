@@ -16,7 +16,7 @@ namespace oBTC_ABC_Miner
 {
     public partial class frmMain : Form
     {
-        string appVersion = "1.4";
+        string appVersion = "1.5";
 
         bool logWork = false;
 
@@ -45,6 +45,14 @@ namespace oBTC_ABC_Miner
                 }
 
                 if (process.ProcessName.ToLower().Contains("suprminer"))
+                {
+                    if (process.MainModule.FileName.ToLower().Contains(Application.StartupPath.ToLower()))
+                    {
+                        process.Kill();
+                    }
+                }
+
+                if (process.ProcessName.ToLower().Contains("wildrig"))
                 {
                     if (process.MainModule.FileName.ToLower().Contains(Application.StartupPath.ToLower()))
                     {
@@ -83,6 +91,154 @@ namespace oBTC_ABC_Miner
         }
 
         private void btnStart_Click(object sender, EventArgs e)
+        {
+            if (btnStart.Text == "Start")
+            {
+                if (txtWallet.Text.Trim().Length != txtWallet.MaxLength)
+                {
+                    MessageBox.Show("Enter wallet address");
+                    return;
+                }
+
+                if (lstDevice.CheckedItems.Count == 0)
+                {
+                    MessageBox.Show("No device selected");
+                    return;
+                }
+
+                btnStart.Enabled = false;
+                cbPoolList.Enabled = false;
+                txtWallet.Enabled = false;
+                lstDevice.Enabled = false;
+                btnSelectAll.Enabled = false;
+                btnClear.Enabled = false;
+
+                walletAddr = txtWallet.Text.Trim();
+
+                switch (cbPoolList.Text)
+                {
+                    case "pool.opticalbitcoin.com":
+                        url = "stratum+tcp://pool.opticalbitcoin.com:5136";
+                        password = "c=OBTC";
+                        break;
+
+                    case "pool.obtc.me":
+                        url = "stratum+tcp://pool.obtc.me:3390";
+                        password = ".";
+                        break;
+
+                    case "obtc.rxrat.com":
+                        url = "stratum+tcp://obtc.rxrat.com:8001";
+                        password = "c=OBTC";
+                        break;
+
+                    case "obtc.suprnova.cc":
+                        url = "stratum+tcp://obtc.suprnova.cc:4075";
+                        password = "x";
+                        break;
+
+                    case "minersmine.com":
+                        url = "stratum+tcp://minersmine.com:5136";
+                        password = "c=OBTC";
+                        break;
+                }
+
+                List<string> devices = new List<string>();
+
+                for (int i = 0; i < lstDevice.CheckedItems.Count; i++)
+                {
+                    devices.Add(lstDevice.CheckedItems[i].ToString());
+                }
+
+                List<BackgroundWorker> bwPool = new List<BackgroundWorker>();
+
+                tabDevices.TabPages.Clear();
+
+                TabPage tb = new TabPage("");
+                tb.BackColor = Color.White;
+
+                TextBox info = new TextBox();
+                info.BackColor = Color.White;
+                info.BorderStyle = BorderStyle.None;
+                info.Multiline = true;
+                info.Dock = DockStyle.Fill;
+                info.ReadOnly = true;
+                info.ScrollBars = ScrollBars.Vertical;
+                tb.Controls.Add(info);
+
+                tabDevices.TabPages.Add(tb);
+
+                string saveFile = Application.StartupPath + "\\" + cbPoolList.Text + ".dat";
+
+                if (File.Exists(saveFile))
+                {
+                    File.Delete(saveFile);
+                }
+
+                StreamWriter sw = new StreamWriter(saveFile, false, Encoding.Default);
+                sw.WriteLine(txtWallet.Text.Trim());
+                for (int i = 0; i < lstDevice.Items.Count; i++)
+                {
+                    sw.WriteLine(lstDevice.Items[i].ToString() + ";" + lstDevice.GetItemCheckState(i));
+                }
+                sw.Close();
+
+
+                BackgroundWorker bwStart = new BackgroundWorker();
+                bwStart.DoWork += BwStart_DoWork;
+                bwStart.RunWorkerAsync(devices);
+                bwPool.Add(bwStart);
+
+                for (int i = 0; i < bwPool.Count; i++)
+                {
+                    while (bwPool[i].IsBusy)
+                    {
+                        Application.DoEvents();
+                        Thread.Sleep(50);
+                    }
+                }
+
+                btnStart.Text = "Start";
+                cbPoolList.Enabled = true;
+                txtWallet.Enabled = true;
+                btnStart.Enabled = true;
+                lstDevice.Enabled = true;
+                btnSelectAll.Enabled = true;
+                btnClear.Enabled = true;
+            }
+
+            if (btnStart.Text == "Stop")
+            {
+                foreach (Process process in Process.GetProcesses())
+                {
+                    if (process.ProcessName.ToLower().Contains("srbminer"))
+                    {
+                        if (process.MainModule.FileName.ToLower().Contains(Application.StartupPath.ToLower()))
+                        {
+                            process.Kill();
+                        }
+                    }
+
+                    if (process.ProcessName.ToLower().Contains("suprminer"))
+                    {
+                        if (process.MainModule.FileName.ToLower().Contains(Application.StartupPath.ToLower()))
+                        {
+                            process.Kill();
+                        }
+                    }
+
+                    if (process.ProcessName.ToLower().Contains("wildrig"))
+                    {
+                        if (process.MainModule.FileName.ToLower().Contains(Application.StartupPath.ToLower()))
+                        {
+                            process.Kill();
+                        }
+                    }
+                }
+            }
+        }
+
+        private void btnStart_ClickOld(object sender, EventArgs e)
         {
             if (btnStart.Text == "Start")
             {
@@ -273,6 +429,80 @@ namespace oBTC_ABC_Miner
                         }
                     }
                 }
+            }
+        }
+
+        private void BwStart_DoWork(object sender, DoWorkEventArgs e)
+        {
+            List<string> devices = (List<string>)e.Argument;
+
+            TextBox info = (TextBox)tabDevices.TabPages[0].Controls[0];
+
+            Action a;
+
+            bool isFound = false;
+
+            foreach (Process p in Process.GetProcesses())
+            {
+                if (p.ProcessName.ToLower().Contains("wildrig"))
+                {
+                    if (p.MainModule.FileName.ToLower().Contains(Application.StartupPath.ToLower()))
+                    {
+                        p.Kill();
+                        isFound = true;
+                    }
+                }
+            }
+
+            if (isFound)
+            {
+                Thread.Sleep(1000);
+            }
+
+            string worker = ".001";
+            string deviceIdList = "";
+
+            for (int i = 0; i < devices.Count; i++)
+            {
+                List<string> adevice = devices[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                deviceIdList += adevice[2] + ",";
+            }
+
+            deviceIdList = deviceIdList.Substring(0, deviceIdList.Length - 1);
+
+            try
+            {
+                Process process = new Process();
+                ProcessStartInfo startInfo = new ProcessStartInfo();
+                startInfo.CreateNoWindow = true;
+                startInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                startInfo.UseShellExecute = false;
+                startInfo.RedirectStandardOutput = true;
+                startInfo.FileName = Application.StartupPath + "\\Wildrig\\wildrig.exe";
+                startInfo.WorkingDirectory = Application.StartupPath + "\\Wildrig\\";
+                startInfo.Arguments = @" --print-full --algo heavyhash --url " + url + " --user " + walletAddr + worker + " --pass " + password + " --opencl-devices=" + deviceIdList;
+                process.StartInfo = startInfo;
+                process.Start();
+
+
+                a = () => btnStart.Text = "Stop"; btnStart.Invoke(a);
+                a = () => btnStart.Enabled = true; btnStart.Invoke(a);
+
+
+                while (!process.HasExited)
+                {
+                    while (!process.StandardOutput.EndOfStream)
+                    {
+                        a = () => info.AppendText(process.StandardOutput.ReadLine() + "\r\n"); info.Invoke(a);
+                    }
+                }
+
+                process.WaitForExit();
+            }
+            catch (Exception ex)
+            {
+                a = () => info.AppendText(ex.Message); info.Invoke(a);
+                return;
             }
         }
 
@@ -614,7 +844,7 @@ namespace oBTC_ABC_Miner
                 MessageBox.Show("Enter wallet address");
                 return;
             }
-            //bc1q60wchj096pstqddt9pjmzgwpayd64r9pg4242h
+
             switch (cbPoolList.Text)
             {
                 case "pool.opticalbitcoin.com":

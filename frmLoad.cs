@@ -39,6 +39,63 @@ namespace oBTC_ABC_Miner
 
         private void BwFindDevices_DoWork(object sender, DoWorkEventArgs e)
         {
+            string _out = "";
+            List<string> _outList = new List<string>();
+
+            Process process = new Process();
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.CreateNoWindow = true;
+            startInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            startInfo.UseShellExecute = false;
+            startInfo.FileName = Application.StartupPath + "\\Wildrig\\wildrig.exe";
+            startInfo.WorkingDirectory = Application.StartupPath + "\\Wildrig\\";
+            startInfo.Arguments = "--print-devices";
+            startInfo.RedirectStandardOutput = true;
+            startInfo.RedirectStandardError = true;
+            process.StartInfo = startInfo;
+            process.Start();
+            _out = process.StandardOutput.ReadToEnd();
+            process.WaitForExit();
+
+            _outList = _out.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+            int workerId = 1;
+
+
+            if (_outList.Count > 0)
+            {
+                for (int i = 0; i < _outList.Count; i++)
+                {
+                    if (_outList[i].Contains("GPU") && _outList[i].Contains("#"))
+                    {
+                        _outList[i] = _outList[i].Replace("\t", " ");
+
+                        List<string> device = _outList[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+
+                        string id = device[1].Replace("#", "").Replace(":", "").Trim();
+
+                        string name = "";
+
+                        for (int ii = 2; ii < 100; ii++)
+                        {
+                            if (device[ii].Trim().Contains("("))
+                            {
+                                break;
+                            }
+
+                            name += device[ii] + "_";
+                        }
+
+                        name = name.Substring(0, name.Length - 1);
+
+                        deviceList.Add(name.Trim() + " ID: " + id.ToString());
+                    }
+                }
+            }
+
+        }
+
+        private void BwFindDevicesOld_DoWork(object sender, DoWorkEventArgs e)
+        {
             Process process = new Process();
             ProcessStartInfo startInfo = new ProcessStartInfo();
             startInfo.CreateNoWindow = true;
