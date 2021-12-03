@@ -26,7 +26,7 @@ namespace oBTC_ABC_Miner
             deviceList = new List<string>();
 
             BackgroundWorker bwFindDevices = new BackgroundWorker();
-            bwFindDevices.DoWork += BwFindDevices_DoWork;
+            bwFindDevices.DoWork += BwFindDevicesX_DoWork;
             bwFindDevices.RunWorkerCompleted += BwFindDevices_RunWorkerCompleted;
             bwFindDevices.RunWorkerAsync();
 
@@ -34,6 +34,129 @@ namespace oBTC_ABC_Miner
             {
                 Application.DoEvents();
                 Thread.Sleep(50);
+            }
+        }
+
+        private void BwFindDevicesX_DoWork(object sender, DoWorkEventArgs e)
+        {
+            int workerId = 1;
+
+            Process process = new Process();
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.CreateNoWindow = true;
+            startInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            startInfo.UseShellExecute = false;
+
+            string _out = "";
+            List<string> _outList;
+
+            for (int platformIndex = 0; platformIndex < 5; platformIndex++)
+            {
+                int devIndex = 0;
+
+                startInfo.FileName = Application.StartupPath + "\\sgminer\\sgminer.exe";
+                startInfo.WorkingDirectory = Application.StartupPath + "\\sgminer\\";
+                startInfo.Arguments = " --gpu-platform " + platformIndex + " -n";
+                startInfo.RedirectStandardOutput = true;
+                process.StartInfo = startInfo;
+                process.Start();
+                _out = process.StandardOutput.ReadToEnd();
+                process.WaitForExit();
+
+                _outList = _out.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+
+                if (_outList.Count > 0)
+                {
+                    if (_outList[0].Contains("does not exist"))
+                    {
+                        break;
+                    }
+
+                    bool passPlatform = false;
+
+                    for (int i = 0; i < _outList.Count; i++)
+                    {
+                        if (_outList[i].Contains("NVIDIA"))
+                        {
+                            passPlatform = true;
+                            break;
+                        }
+                    }
+
+                    if (passPlatform)
+                    {
+                        continue;
+                    }
+
+                    for (int i = 0; i < _outList.Count; i++)
+                    {
+                        if (_outList[i].Contains("GPU") && _outList[i].Contains("assigned:"))
+                        {
+                            List<string> device = _outList[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+
+                            string name = "";
+
+                            for (int ii = 11; ii < device.Count; ii++)
+                            {
+                                name += device[ii] + "_";
+                            }
+                            name = name.Substring(0, name.Length - 1).Replace("name:", "");
+
+                            deviceList.Add("AMD: " + name + " Platform: " + platformIndex + " ID: " + devIndex + " Worker: " + workerId.ToString("000"));
+                            devIndex++;
+                            workerId++;
+                        }
+                    }
+                }
+            }
+
+            _out = "";
+            _outList = new List<string>();
+
+            process = new Process();
+            startInfo = new ProcessStartInfo();
+            startInfo.CreateNoWindow = true;
+            startInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            startInfo.UseShellExecute = false;
+            startInfo.FileName = Application.StartupPath + "\\ccminer\\ccminer.exe";
+            startInfo.WorkingDirectory = Application.StartupPath + "\\ccminer\\";
+            startInfo.Arguments = "-n";
+            startInfo.RedirectStandardOutput = true;
+            startInfo.RedirectStandardError = true;
+            process.StartInfo = startInfo;
+            process.Start();
+            _out = process.StandardError.ReadToEnd();
+            process.WaitForExit();
+
+            _outList = _out.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+
+            if (_outList.Count > 0)
+            {
+                for (int i = 0; i < _outList.Count; i++)
+                {
+                    if (_outList[i].Contains("GPU") && _outList[i].Contains("#"))
+                    {
+                        List<string> device = _outList[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+
+                        string id = device[1].Replace("#", "").Replace(":", "").Trim();
+
+                        string name = "";
+
+                        for (int ii = 4; ii < 100; ii++)
+                        {
+                            if (device[ii].Trim() == "@")
+                            {
+                                break;
+                            }
+
+                            name += device[ii] + "_";
+                        }
+
+                        name = name.Substring(0, name.Length - 1);
+
+                        deviceList.Add("NVIDIA: " + name.Trim() + " ID: " + id.ToString() + " Worker: " + (workerId++).ToString("000"));
+                    }
+                }
             }
         }
 
@@ -77,7 +200,7 @@ namespace oBTC_ABC_Miner
 
                         for (int ii = 2; ii < 100; ii++)
                         {
-                            if (device[ii].Trim().Contains("("))
+                            if (device[ii].Trim().Contains("(busID"))
                             {
                                 break;
                             }
